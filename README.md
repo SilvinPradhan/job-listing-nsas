@@ -43,7 +43,7 @@ This Discord bot is designed to fetch the latest job and internship listings usi
 4. Run the bot:
 
     ```bash
-    python bot.py
+    python job_bot.py
     ```
 
 Once the bot is online, it will respond to slash commands and automatically post job listings.
@@ -112,6 +112,7 @@ JOB_FIELDS = [
     app_commands.Choice(name='Engineering', value='engineering'),  # Example of adding a new field
     # Add more fields as needed
 ]
+```
 
 ### Changing Auto Post Job Locations
 
@@ -139,6 +140,7 @@ async def post_jobs():
         job_listings_bio = format_jobs(bio_jobs)
         chunks_bio = split_message(job_listings_bio)
         for chunk in chunks_bio:
-            await channel.send(chunk)
+            await channel.send(chunk)           
+```
 
 
