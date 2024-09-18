@@ -56,4 +56,17 @@ This command fetches the latest job listings for the specified job field and loc
 
 ---
 
+### 5. Daily Motivation Quote [🚧 Work in progress]
+Automatically send a motivational quote to a designated channel at 8 AM every day using the [ZenQuotes API](https://zenquotes.io/). This feature is designed to help users start their day with a positive and inspiring message.
+
+**Scheduled Task**:  
+A daily task will trigger at 8 AM, posting a quote in a specified channel.
+
+**Example**:  
+_"Success is not final, failure is not fatal: It is the courage to continue that counts." – Winston Churchill_
+
+This feature is currently being developed and will allow users to receive a motivational quote at the start of each day.
+
+---
+
 These features are designed to enhance your job search experience by providing flexible search options and the ability to export job data for easy access.
