@@ -28,6 +28,7 @@ Thank you for contributing!
 
 ## Features
 
+- **Fetch job listings by custom keywords**: Allows users to search for jobs by custom keywords and US state codes.
 - **Fetch job listings**: Allows users to search for internships in specific fields and US states.
 - **Scheduled job postings**: Automatically posts the latest job listings for predefined fields and locations at regular intervals (every 6 hours).
 - **Rate-limited commands**: The job search commands are rate-limited to prevent API spamming.
@@ -77,6 +78,21 @@ Once the bot is online, it will respond to slash commands and automatically post
 ---
 
 ## Commands
+
+### `/search_jobs` Command
+
+**Description**: Searches for jobs by custom keywords and US state code (e.g., TX for Texas, LA for Louisiana).
+
+**Usage**: `/search_jobs keywords:<keywords> location:<state_code>`
+
+- **Keywords**: Enter any job title or custom keyword (e.g., `software engineer`, `data scientist`).
+- **Location**: Enter a valid two-letter US state code (e.g., `TX` for Texas, `LA` for Louisiana).
+
+**Example**: `/search_jobs keywords:software engineer location:TX`
+
+This command fetches the latest job listings based on the provided keywords and location. The bot will format the response and return job titles, company names, locations, and links to apply.
+
+If there are too many job listings, the bot will split the message into multiple chunks to stay within Discord's 2000-character message limit.
 
 ### `/job` Command
 
