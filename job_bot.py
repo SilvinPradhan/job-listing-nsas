@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 import os
 from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS,fetchQuotesApi
 from discord.ext.commands import CommandOnCooldown
-# from apscheduler.schedulers.asyncio import AsyncIOScheduler
-# from apscheduler.triggers.cron import CronTrigger
 
 load_dotenv()
 
@@ -90,9 +88,6 @@ async def search_jobs(interaction: discord.Interaction, keywords: str, location:
         )
         print(f"Unexpected error: {e}")
 
-        
-# apscheduler setup
-# schedule = AsyncIOScheduler()
 
 # Slash command to fetch job listings by user request with rate limiting
 @bot.tree.command(
@@ -190,9 +185,6 @@ async def post_jobs():
 async def on_ready():
     print(f"Bot {bot.user.name} is now online!")
     post_jobs.start()
-    # this will run the program at 8:00 am everyday
-    # schedule.add_job(getQuotes, CronTrigger(hour=11, minute=54))
-    # schedule.start()
     await getQuotes()
     await bot.tree.sync()
 
