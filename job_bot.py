@@ -1,11 +1,12 @@
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
-
 from dotenv import load_dotenv
 import os
-from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS
+from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS,fetchQuotesApi
 from discord.ext.commands import CommandOnCooldown
+# from apscheduler.schedulers.asyncio import AsyncIOScheduler
+# from apscheduler.triggers.cron import CronTrigger
 
 load_dotenv()
 
@@ -18,6 +19,9 @@ intents.message_content = True  # Enable message content intent
 
 # Define the bot and command prefix
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# apscheduler setup
+# schedule = AsyncIOScheduler()
 
 # Slash command to fetch job listings by user request with rate limiting
 @bot.tree.command(
@@ -58,7 +62,29 @@ async def job(interaction: discord.Interaction,
             ephemeral=True)
 
 
-# Task to automatically post new job listings every 6 hours
+@tasks.loop(hours=24)
+async def getQuotes():
+    channel = bot.get_channel(JOB_POSTING_CHANNEL_ID)
+    if channel:
+        apiUrl = 'https://zenquotes.io/api/quotes/'
+        data = await fetchQuotesApi(apiUrl)
+        mlist =[]
+        if data:
+# Data is long list with each value of dictionary. taking only one element
+            data = data[0]
+# Dict's first two elements is placed into list to send it.
+            for x in data.values():
+                mlist.append(x)
+            try:
+                await channel.send(f" \"{mlist[0]}\"- {mlist[1]} ")
+                print(f"Data sent {mlist[0]}")
+            except discord.errors.HTTPException as e:
+                print(f"Failed to send data: {e}")
+        else:
+            await channel.send("Failed to fetch motivational quotes.")
+
+
+# Task to automatically post new job listings every 6 hours and quotes   
 @tasks.loop(hours=6)
 async def post_jobs():
     await bot.wait_until_ready()
@@ -93,6 +119,10 @@ async def post_jobs():
 async def on_ready():
     print(f"Bot {bot.user.name} is now online!")
     post_jobs.start()
+    # this will run the program at 8:00 am everyday
+    # schedule.add_job(getQuotes, CronTrigger(hour=11, minute=54))
+    # schedule.start()
+    await getQuotes()
     await bot.tree.sync()
 
 bot.run(DISCORD_BOT_TOKEN)
