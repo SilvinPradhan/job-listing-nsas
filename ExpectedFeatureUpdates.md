@@ -4,7 +4,7 @@ A Discord bot that helps users search and export job listings using the Adzuna A
 
 ## Features
 
-### 1. Job Search by Custom Keywords
+### 1. Job Search by Custom Keywords [✅Task completed]
 Search for jobs using any custom keywords for a more flexible job search. This allows users to specify exactly what they are looking for without being limited to predefined categories.
 
 **Command**:  
