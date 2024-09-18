@@ -1,4 +1,5 @@
 import discord
+import requests
 from discord.ext import commands, tasks
 from discord import app_commands
 from dotenv import load_dotenv
@@ -20,6 +21,76 @@ intents.message_content = True  # Enable message content intent
 # Define the bot and command prefix
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+@bot.tree.command(
+    name="search_jobs",
+    description="Search for jobs by custom keywords and location (state abbreviation)"
+)
+@app_commands.describe(
+    keywords="Enter the job title or keywords",
+    location="Enter a US state abbreviation (e.g., TX for Texas, LA for Louisiana)"
+)
+async def search_jobs(interaction: discord.Interaction, keywords: str, location: str):
+    try:
+        # Check if keywords or location is empty
+        if not keywords.strip():
+            await interaction.response.send_message("Please provide valid keywords for the job search.", ephemeral=True)
+            return
+        if not location.strip():
+            await interaction.response.send_message("Please provide a valid location for the job search.", ephemeral=True)
+            return
+
+        # Convert the location (state abbreviation) to full state name
+        state_code = location.upper()
+        if state_code not in US_STATES:
+            await interaction.response.send_message(
+                "Invalid US state code. Please use a valid two-letter state code (e.g., LA, TX, NY).",
+                ephemeral=True
+            )
+            return
+
+        # Use the full state name in the search
+        full_location = US_STATES[state_code]
+
+        # Fetch jobs using the helper function
+        jobs = fetch_adzuna_jobs(keywords, full_location)
+
+        # If the response is empty or no jobs found
+        if not jobs:
+            await interaction.response.send_message(
+                f"No job listings found for '{keywords}' in '{full_location}'. Please try different keywords or location.",
+                ephemeral=True
+            )
+            return
+
+        # Format job listings and split them into chunks for Discord message limits
+        job_listings = format_jobs(jobs)
+        if job_listings:
+            chunks = split_message(job_listings)
+            await interaction.response.send_message(chunks[0])  # Send the first chunk
+            for chunk in chunks[1:]:
+                await interaction.followup.send(chunk)  # Send subsequent chunks
+        else:
+            await interaction.response.send_message(
+                f"No job listings found for '{keywords}' in '{full_location}'.",
+                ephemeral=True
+            )
+
+    except requests.exceptions.RequestException as e:
+        # Handle connection errors (e.g., API unreachable)
+        await interaction.response.send_message(
+            "Failed to retrieve job listings due to a connection issue. Please try again later.",
+            ephemeral=True
+        )
+        print(f"RequestException: {e}")
+    except Exception as e:
+        # Handle any other unexpected errors
+        await interaction.response.send_message(
+            "An unexpected error occurred while processing your request. Please try again later.",
+            ephemeral=True
+        )
+        print(f"Unexpected error: {e}")
+
+        
 # apscheduler setup
 # schedule = AsyncIOScheduler()
 
@@ -70,9 +141,9 @@ async def getQuotes():
         data = await fetchQuotesApi(apiUrl)
         mlist =[]
         if data:
-# Data is long list with each value of dictionary. taking only one element
+            # Data is long list with each value of dictionary. taking only one element
             data = data[0]
-# Dict's first two elements is placed into list to send it.
+            # Dict's first two elements is placed into list to send it.
             for x in data.values():
                 mlist.append(x)
             try:

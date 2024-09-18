@@ -2,8 +2,33 @@
 
 This Discord bot is designed to fetch the latest job and internship listings using the [Adzuna Job Search API](https://developer.adzuna.com/). It can be used to search for internships by field and location, as well as automatically post job updates to a specific Discord channel every 6 hours.
 
+
+## Contributing
+
+We follow a **feature branch workflow**. All new features and bug fixes should go to the `dev` branch first.
+
+### Workflow
+
+1. **Fork the repository**.
+2. **Create a new branch** from `dev` (e.g., `feature/new-feature`).
+3. **Make your changes and commit** them to your new branch.
+4. **Push your branch** to your forked repository.
+5. **Submit a pull request** targeting the `dev` branch.
+6. Your changes will be reviewed, and once approved, they will be merged into `dev`.
+7. Periodically, `dev` will be merged into `main` after it has been tested and is stable.
+
+### Branch Protection
+
+- The `main` branch is **protected** and only accepts changes from the `dev` branch after thorough testing.
+- All contributions must be submitted via pull requests to the `dev` branch.
+
+Thank you for contributing!
+
+---
+
 ## Features
 
+- **Fetch job listings by custom keywords**: Allows users to search for jobs by custom keywords and US state codes.
 - **Fetch job listings**: Allows users to search for internships in specific fields and US states.
 - **Scheduled job postings**: Automatically posts the latest job listings for predefined fields and locations at regular intervals (every 6 hours).
 - **Rate-limited commands**: The job search commands are rate-limited to prevent API spamming.
@@ -15,6 +40,8 @@ This Discord bot is designed to fetch the latest job and internship listings usi
 - A [Discord Developer Account](https://discord.com/developers/applications)
 - A [Discord Bot Token](https://discord.com/developers/docs/intro)
 - Adzuna API Credentials (App ID and App Key)
+
+---
 
 ## Setup
 
@@ -48,7 +75,24 @@ This Discord bot is designed to fetch the latest job and internship listings usi
 
 Once the bot is online, it will respond to slash commands and automatically post job listings.
 
+---
+
 ## Commands
+
+### `/search_jobs` Command
+
+**Description**: Searches for jobs by custom keywords and US state code (e.g., TX for Texas, LA for Louisiana).
+
+**Usage**: `/search_jobs keywords:<keywords> location:<state_code>`
+
+- **Keywords**: Enter any job title or custom keyword (e.g., `software engineer`, `data scientist`).
+- **Location**: Enter a valid two-letter US state code (e.g., `TX` for Texas, `LA` for Louisiana).
+
+**Example**: `/search_jobs keywords:software engineer location:TX`
+
+This command fetches the latest job listings based on the provided keywords and location. The bot will format the response and return job titles, company names, locations, and links to apply.
+
+If there are too many job listings, the bot will split the message into multiple chunks to stay within Discord's 2000-character message limit.
 
 ### `/job` Command
 
@@ -78,6 +122,8 @@ The bot is configured to automatically post job listings to a specified Discord 
 **Customizing Auto Postings**:
 You can modify the code in the `post_jobs()` function (found in `bot.py`) to change the job fields and locations for automatic postings.
 
+---
+
 ## File Structure
 
 ```plaintext
@@ -96,6 +142,8 @@ discord-bot/
 └── deploy/               # Deployment-related files
     └── digitalocean.md   # DigitalOcean deployment instructions
 ```
+
+---
 
 ## Customization
 
