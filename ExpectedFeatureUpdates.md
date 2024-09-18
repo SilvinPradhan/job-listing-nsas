@@ -56,7 +56,7 @@ This command fetches the latest job listings for the specified job field and loc
 
 ---
 
-### 5. Daily Motivation Quote [🚧 Work in progress]
+### 5. Daily Motivation Quote [✅Task completed]
 Automatically send a motivational quote to a designated channel at 8 AM every day using the [ZenQuotes API](https://zenquotes.io/). This feature is designed to help users start their day with a positive and inspiring message.
 
 **Scheduled Task**:  
