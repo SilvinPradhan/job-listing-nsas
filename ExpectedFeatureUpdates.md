@@ -30,20 +30,7 @@ This command returns a list of job postings from the specified company in the pr
 
 ---
 
-### 3. Job Posting by Salary Range
-Filter job postings based on salary to focus on opportunities that match your compensation expectations. You can specify a minimum and maximum salary to fine-tune your search.
-
-**Command**:  
-`/search_by_salary [min_salary] [max_salary]`
-
-**Example**:  
-`/search_by_salary 50000 100000`
-
-This command returns job listings with salaries that fall within the specified range.
-
----
-
-### 4. Report Generation in Excel
+### 3. Report Generation in Excel
 Generate a detailed report of job postings for a specific field and location. The report will be created in an Excel file and can be downloaded with all relevant job details like job title, company, location, type, and salary.
 
 **Command**:  
@@ -56,7 +43,7 @@ This command fetches the latest job listings for the specified job field and loc
 
 ---
 
-### 5. Daily Motivation Quote [✅Task completed]
+### 4. Daily Motivation Quote [✅Task completed]
 Automatically send a motivational quote to a designated channel at 8 AM every day using the [ZenQuotes API](https://zenquotes.io/). This feature is designed to help users start their day with a positive and inspiring message.
 
 **Scheduled Task**:  
