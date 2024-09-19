@@ -4,7 +4,8 @@ from discord.ext import commands, tasks
 from discord import app_commands
 from dotenv import load_dotenv
 import os
-from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS,fetchQuotesApi
+import traceback
+from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS, fetchQuotesApi, fetch_salary_histogram, plot_salary_histogram
 from discord.ext.commands import CommandOnCooldown
 
 load_dotenv()
@@ -143,7 +144,7 @@ async def getQuotes():
                 mlist.append(x)
             try:
                 await channel.send(f" \"{mlist[0]}\"- {mlist[1]} ")
-                print(f"Data sent {mlist[0]}")
+                
             except discord.errors.HTTPException as e:
                 print(f"Failed to send data: {e}")
         else:
@@ -180,11 +181,53 @@ async def post_jobs():
         for chunk in chunks_bio:
             await channel.send(chunk)
 
+# Slash command to generate and display salary histogram
+@bot.tree.command(
+    name="salary_histogram",
+    description="Fetch and display salary distribution for a job title in a specific state"
+)
+@app_commands.describe(job_title="Enter the job title", state="Enter the state abbreviation (e.g., TX, CA)")
+async def salary_histogram(interaction: discord.Interaction, job_title: str, state: str):
+    try:
+        # Defer the response immediately to avoid timeout issues
+        await interaction.response.defer()
+
+        # Convert the state abbreviation to the full state name
+        state_code = state.upper()
+        if state_code not in US_STATES:
+            await interaction.followup.send("Invalid state abbreviation. Please use valid two-letter US state codes (e.g., TX, CA).", ephemeral=True)
+            return
+
+        full_state_name = US_STATES[state_code]  # Convert abbreviation to full state name
+
+        # Fetch salary histogram data from Adzuna API
+        histogram_data = fetch_salary_histogram(job_title, full_state_name)
+
+        if not histogram_data:
+            await interaction.followup.send(f"No salary histogram data found for {job_title} in {full_state_name}.", ephemeral=True)
+            return
+
+        # Generate the histogram plot
+        histogram_image = plot_salary_histogram(histogram_data)
+
+        # Check if the plot was generated successfully
+        if histogram_image is None:
+            await interaction.followup.send("Failed to generate the salary histogram.", ephemeral=True)
+            return
+
+        # Send the histogram plot as an image
+        await interaction.followup.send(file=discord.File(histogram_image, 'salary_histogram.png'))
+
+    except Exception as e:
+        # Send the error as a follow-up message (since interaction has already been deferred)
+        await interaction.followup.send("An error occurred while fetching or plotting the salary histogram.", ephemeral=True)
+        print(f"Error: {e}")
+        traceback.print_exc()
 
 @bot.event
 async def on_ready():
     print(f"Bot {bot.user.name} is now online!")
-    post_jobs.start()
+    # post_jobs.start()
     await getQuotes()
     await bot.tree.sync()
 
