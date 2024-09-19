@@ -31,6 +31,8 @@ Thank you for contributing!
 - **Fetch job listings by custom keywords**: Allows users to search for jobs by custom keywords and US state codes.
 - **Fetch job listings**: Allows users to search for internships in specific fields and US states.
 - **Scheduled job postings**: Automatically posts the latest job listings for predefined fields and locations at regular intervals (every 6 hours).
+- **Salary histogram**: Fetches and displays the salary distribution for a specific job title and location (state) in the United States.
+- **Motivational quotes**: Posts a daily motivational quote in a designated channel.
 - **Rate-limited commands**: The job search commands are rate-limited to prevent API spamming.
 - **Slash commands**: Uses Discord’s modern slash commands for user interaction.
 
@@ -112,6 +114,33 @@ If there are too many job listings, the bot will split the message into multiple
 
 **Rate Limit**: The command is rate-limited to one request per 30 seconds per user to avoid overloading the API.
 
+### `/salary_histogram` Command
+
+**Description**: Fetches and displays the salary distribution (in histogram format) for a specific job title and location (state) in the United States.
+
+**Usage**: `/salary_histogram job_title:<job_title> state:<state_code>`
+
+- **Job Title**: Enter any job title (e.g., `software engineer`, `data scientist`).
+- **State**: Enter a valid two-letter US state code (e.g., `TX` for Texas, `LA` for Louisiana).
+
+**Example**: `/salary_histogram job_title:software engineer state:TX`
+
+This command fetches the salary distribution for the given job title and state, and returns a histogram displaying salary ranges and the number of vacancies in each range.
+
+**Note**: The bot defers the response to handle long API requests and plotting time. It will return the histogram image once it has been generated.
+
+### Motivational Quotes
+
+The bot is configured to fetch a motivational quote from the [ZenQuotes API](https://zenquotes.io/) and post it in the designated Discord channel every 24 hours.
+
+- **API Used**: [ZenQuotes API](https://zenquotes.io/)
+
+**Example Output**:
+
+```plaintext
+"Your time is limited, so don't waste it living someone else's life." - Steve Jobs
+```
+
 ### Automatic Job Postings
 
 The bot is configured to automatically post job listings to a specified Discord channel every 6 hours. The default setup fetches internships for predefined job fields and locations.
@@ -139,6 +168,9 @@ discord-bot/
 │   ├── helpers.py        # Utility/helper functions for message splitting
 │   ├── us_states.py      # Contains US state abbreviations and full names
 │   ├── job_fields.py     # Contains job field choices
+│   ├── motivation.py     # Contains job field choices
+│   ├── histogram_fetcher.py  # File for fetching histogram data from Adzuna API
+│   ├── histogram_plotter.py  # File for plotting the salary histogram
 └── deploy/               # Deployment-related files
     └── digitalocean.md   # DigitalOcean deployment instructions
 ```
