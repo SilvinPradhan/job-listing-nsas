@@ -4,7 +4,7 @@ from discord.ext import commands, tasks
 from discord import app_commands
 from dotenv import load_dotenv
 import os
-from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS, fetchQuotesApi
+from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS,fetchQuotesApi
 from discord.ext.commands import CommandOnCooldown
 
 load_dotenv()
