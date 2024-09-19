@@ -1,10 +1,10 @@
 import discord
+import requests
 from discord.ext import commands, tasks
 from discord import app_commands
-
 from dotenv import load_dotenv
 import os
-from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS
+from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS, fetchQuotesApi
 from discord.ext.commands import CommandOnCooldown
 
 load_dotenv()
@@ -19,28 +19,99 @@ intents.message_content = True  # Enable message content intent
 # Define the bot and command prefix
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Slash command to fetch job listings by user request with additional filters
+@bot.tree.command(
+    name="search_jobs",
+    description="Search for jobs by custom keywords and location (state abbreviation)"
+)
+@app_commands.describe(
+    keywords="Enter the job title or keywords",
+    location="Enter a US state abbreviation (e.g., TX for Texas, LA for Louisiana)",
+    salary_min="Enter the minimum salary (optional)",
+    company="Enter the company name (optional)",
+    page="Enter the page number for pagination (default is 1)",
+    days_limit="Enter the number of days to limit job postings (optional)"
+)
+async def search_jobs(interaction: discord.Interaction, keywords: str, location: str, salary_min: int = 0, company: str = "", page: int = 1, days_limit: int = 30):
+    try:
+        # Check if keywords or location is empty
+        if not keywords.strip():
+            await interaction.response.send_message("Please provide valid keywords for the job search.", ephemeral=True)
+            return
+        if not location.strip():
+            await interaction.response.send_message("Please provide a valid location for the job search.", ephemeral=True)
+            return
+
+        # Convert the location (state abbreviation) to full state name
+        state_code = location.upper()
+        if state_code not in US_STATES:
+            await interaction.response.send_message(
+                "Invalid US state code. Please use a valid two-letter state code (e.g., LA, TX, NY).",
+                ephemeral=True
+            )
+            return
+
+        # Use the full state name in the search
+        full_location = US_STATES[state_code]
+
+        # Fetch jobs using the helper function
+        jobs = fetch_adzuna_jobs(keywords, full_location, salary_min=salary_min, company=company, page=page, days_limit=days_limit)
+
+        # If the response is empty or no jobs found
+        if not jobs:
+            await interaction.response.send_message(
+                f"No job listings found for '{keywords}' in '{full_location}'. Please try different keywords or location.",
+                ephemeral=True
+            )
+            return
+
+        # Format job listings and split them into chunks for Discord message limits
+        job_listings = format_jobs(jobs)
+        if job_listings:
+            chunks = split_message(job_listings)
+            await interaction.response.send_message(chunks[0])  # Send the first chunk
+            for chunk in chunks[1:]:
+                await interaction.followup.send(chunk)  # Send subsequent chunks
+        else:
+            await interaction.response.send_message(
+                f"No job listings found for '{keywords}' in '{full_location}'.",
+                ephemeral=True
+            )
+
+    except requests.exceptions.RequestException as e:
+        # Handle connection errors (e.g., API unreachable)
+        await interaction.response.send_message(
+            "Failed to retrieve job listings due to a connection issue. Please try again later.",
+            ephemeral=True
+        )
+        print(f"RequestException: {e}")
+    except Exception as e:
+        # Handle any other unexpected errors
+        await interaction.response.send_message(
+            "An unexpected error occurred while processing your request. Please try again later.",
+            ephemeral=True
+        )
+        print(f"Unexpected error: {e}")
+
+
+# Slash command to fetch job listings by user request with rate limiting
 @bot.tree.command(
     name="job",
-    description="Fetch the latest jobs or internships for a specific field in a US state"
-)
+    description=
+    "Fetch the latest internships for a specific field in a US state")
 @app_commands.describe(
     field="Select a job field",
     state="Enter a valid US state code (e.g., LA for Louisiana)",
-    salary_min="Optional: Set a minimum salary (e.g., 50000)",
-    company="Optional: Search for jobs by a specific company",
-    days_limit="Optional: Limit jobs to those posted within the last X days (default: 30)",
-    page="Optional: Specify a page for pagination (default: 1)"
+    salary_min="Enter the minimum salary (optional)",
+    company="Enter the company name (optional)",
+    page="Enter the page number for pagination (default is 1)",
+    days_limit="Enter the number of days to limit job postings (optional)"
 )
 @app_commands.choices(field=JOB_FIELDS)
-@commands.cooldown(rate=1, per=30, type=commands.BucketType.user)  # Rate limit: 1 use per 30 seconds per user
+@commands.cooldown(
+    rate=1, per=30,
+    type=commands.BucketType.user)  # Rate limit: 1 use per 30 seconds per user
 async def job(interaction: discord.Interaction,
-              field: app_commands.Choice[str], 
-              state: str, 
-              salary_min: int = 0, 
-              company: str = "", 
-              days_limit: int = 30, 
-              page: int = 1):
+              field: app_commands.Choice[str], state: str, salary_min: int = 0, company: str = "", page: int = 1, days_limit: int = 30):
     try:
         state_code = state.upper()
         if state_code not in US_STATES:
@@ -48,17 +119,8 @@ async def job(interaction: discord.Interaction,
                 "Invalid US state code. Please use a valid two-letter state code (e.g., LA, TX, NY)."
             )
             return
-
-        search_term = field.value + " job"
-        jobs = fetch_adzuna_jobs(
-            search_term, 
-            location=US_STATES[state_code], 
-            salary_min=salary_min, 
-            company=company, 
-            days_limit=days_limit, 
-            page=page
-        )
-        
+        search_term = field.value + " internship"
+        jobs = fetch_adzuna_jobs(search_term, location=US_STATES[state_code], salary_min=salary_min, company=company, page=page, days_limit=days_limit)
         job_listings = format_jobs(jobs)
         if job_listings:
             chunks = split_message(job_listings)
@@ -72,11 +134,32 @@ async def job(interaction: discord.Interaction,
     except CommandOnCooldown as e:
         await interaction.response.send_message(
             f"You're doing that too often! Try again in {e.retry_after:.2f} seconds.",
-            ephemeral=True
-        )
+            ephemeral=True)
 
 
-# Task to automatically post new job listings every 6 hours
+@tasks.loop(hours=24)
+async def getQuotes():
+    channel = bot.get_channel(JOB_POSTING_CHANNEL_ID)
+    if channel:
+        apiUrl = 'https://zenquotes.io/api/quotes/'
+        data = await fetchQuotesApi(apiUrl)
+        mlist = []
+        if data:
+            # Data is long list with each value of dictionary. taking only one element
+            data = data[0]
+            # Dict's first two elements is placed into list to send it.
+            for x in data.values():
+                mlist.append(x)
+            try:
+                await channel.send(f" \"{mlist[0]}\"- {mlist[1]} ")
+                print(f"Data sent {mlist[0]}")
+            except discord.errors.HTTPException as e:
+                print(f"Failed to send data: {e}")
+        else:
+            await channel.send("Failed to fetch motivational quotes.")
+
+
+# Task to automatically post new job listings every 6 hours and quotes   
 @tasks.loop(hours=6)
 async def post_jobs():
     await bot.wait_until_ready()
@@ -88,28 +171,40 @@ async def post_jobs():
         return
 
     # Fetch jobs for Computer Science in Louisiana (Default)
-    cs_jobs = fetch_adzuna_jobs('computer science job', location='Louisiana')
+    cs_jobs = fetch_adzuna_jobs('computer science internship', location='Louisiana')
     if cs_jobs:
-        await channel.send("**Latest Computer Science Jobs in Louisiana:**")
+        await channel.send(
+            "**Latest Computer Science Internships in Louisiana:**")
         job_listings_cs = format_jobs(cs_jobs)
         chunks_cs = split_message(job_listings_cs)
         for chunk in chunks_cs:
             await channel.send(chunk)
 
     # Fetch jobs for Biology in Louisiana (Default)
-    bio_jobs = fetch_adzuna_jobs('biology job', location='Louisiana')
+    bio_jobs = fetch_adzuna_jobs('biology internship', location='Louisiana')
     if bio_jobs:
-        await channel.send("**Latest Biology Jobs in Louisiana:**")
+        await channel.send("**Latest Biology Internships in Louisiana:**")
         job_listings_bio = format_jobs(bio_jobs)
         chunks_bio = split_message(job_listings_bio)
         for chunk in chunks_bio:
             await channel.send(chunk)
+
+    # Fetch additional fields (if needed)
+    for field in JOB_FIELDS:
+        field_jobs = fetch_adzuna_jobs(f'{field} internship', location='Louisiana')
+        if field_jobs:
+            await channel.send(f"**Latest {field.capitalize()} Internships in Louisiana:**")
+            job_listings_field = format_jobs(field_jobs)
+            chunks_field = split_message(job_listings_field)
+            for chunk in chunks_field:
+                await channel.send(chunk)
 
 
 @bot.event
 async def on_ready():
     print(f"Bot {bot.user.name} is now online!")
     post_jobs.start()
+    await getQuotes()
     await bot.tree.sync()
 
 bot.run(DISCORD_BOT_TOKEN)
