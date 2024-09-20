@@ -11,7 +11,6 @@ def plot_salary_histogram(histogram_data):
             print("Error: No valid salary data to plot.")
             return None
 
-        # Create a bar plot
         plt.figure(figsize=(8, 6))
         plt.bar(salary_ranges, vacancies, width=5000, color='blue')
         plt.xlabel('Salary ($)')

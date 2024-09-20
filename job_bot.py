@@ -5,7 +5,11 @@ from discord import app_commands
 from dotenv import load_dotenv
 import os
 import traceback
-from cogs import fetch_adzuna_jobs, split_message, format_jobs, US_STATES, JOB_FIELDS, fetchQuotesApi, fetch_salary_histogram, plot_salary_histogram
+from cogs.jobs import fetch_adzuna_jobs, format_jobs, fetch_jobs_from_adzuna
+from cogs.utils import split_message, US_STATES, JOB_FIELDS
+from cogs.misc import fetchQuotesApi
+from cogs.excel import create_excel_file
+from cogs.histogram import fetch_salary_histogram, plot_salary_histogram
 from discord.ext.commands import CommandOnCooldown
 
 load_dotenv()
@@ -192,25 +196,21 @@ async def salary_histogram(interaction: discord.Interaction, job_title: str, sta
         # Defer the response immediately to avoid timeout issues
         await interaction.response.defer()
 
-        # Convert the state abbreviation to the full state name
         state_code = state.upper()
         if state_code not in US_STATES:
             await interaction.followup.send("Invalid state abbreviation. Please use valid two-letter US state codes (e.g., TX, CA).", ephemeral=True)
             return
 
-        full_state_name = US_STATES[state_code]  # Convert abbreviation to full state name
+        full_state_name = US_STATES[state_code]
 
-        # Fetch salary histogram data from Adzuna API
         histogram_data = fetch_salary_histogram(job_title, full_state_name)
 
         if not histogram_data:
             await interaction.followup.send(f"No salary histogram data found for {job_title} in {full_state_name}.", ephemeral=True)
             return
 
-        # Generate the histogram plot
         histogram_image = plot_salary_histogram(histogram_data)
 
-        # Check if the plot was generated successfully
         if histogram_image is None:
             await interaction.followup.send("Failed to generate the salary histogram.", ephemeral=True)
             return
@@ -219,10 +219,51 @@ async def salary_histogram(interaction: discord.Interaction, job_title: str, sta
         await interaction.followup.send(file=discord.File(histogram_image, 'salary_histogram.png'))
 
     except Exception as e:
-        # Send the error as a follow-up message (since interaction has already been deferred)
-        await interaction.followup.send("An error occurred while fetching or plotting the salary histogram.", ephemeral=True)
         print(f"Error: {e}")
         traceback.print_exc()
+
+# Command to fetch and export jobs to Excel
+@bot.tree.command(
+    name="fetch_jobs_excel", 
+    description="Fetch top 10 latest jobs and export them as an Excel file"
+)
+@app_commands.describe(
+    title="Enter job title or keyword",
+    job_type="Specify job type: full_time, part_time, permanent, or contract",
+    state="Enter the state abbreviation (e.g., CA for California)",
+    city="Enter the city name"
+)
+async def fetch_jobs_excel(
+    interaction: discord.Interaction, 
+    title: str, 
+    job_type: str, 
+    state: str, 
+    city: str
+):
+    try:
+        await interaction.response.defer()
+
+        jobs_data = await fetch_jobs_from_adzuna(title, job_type, state, city)
+        if not jobs_data:
+            await interaction.followup.send("Failed to fetch job data.", ephemeral=True)
+            return
+
+        excel_file = create_excel_file(jobs_data)
+        
+        formatted_title = title.replace(" ", "_").lower()
+        formatted_job_type = job_type.lower()
+        formatted_city = city.replace(" ", "_").lower()
+        formatted_state = state.upper()
+        
+        file_name = f"top_10_latest_{formatted_title}_{formatted_job_type}_in_{formatted_city}_{formatted_state}.xlsx"
+
+        # Send the file as an attachment
+        await interaction.followup.send(file=discord.File(excel_file, file_name))
+
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"Error: {e}")
+        print(f"Traceback:\n{error_trace}")
 
 @bot.event
 async def on_ready():

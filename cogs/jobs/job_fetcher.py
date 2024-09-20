@@ -1,3 +1,4 @@
+import aiohttp
 import requests
 import os
 from dotenv import load_dotenv
@@ -40,6 +41,34 @@ def fetch_adzuna_jobs(search_term, location=""):
 
     return jobs
 
+
+# Function to fetch jobs from Adzuna API dynamically based on user input
+async def fetch_jobs_from_adzuna(title, job_type, state, city):
+    url = 'http://api.adzuna.com:80/v1/api/jobs/us/search/1'
+    params = {
+        'app_id': os.getenv('ADZUNA_APP_ID'),
+        'app_key': os.getenv('ADZUNA_APP_KEY'),
+        'results_per_page': 10,
+        'what': title,
+        'where': f"{city}, {state}",
+        'content-type': 'application/json'
+    }
+    
+    if job_type == 'full_time':
+        params['full_time'] = 1
+    elif job_type == 'part_time':
+        params['part_time'] = 1
+    elif job_type == 'permanent':
+        params['permanent'] = 1
+    elif job_type == 'contract':
+        params['contract'] = 1
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data['results']
+            return None
 
 # Function to format job listings
 def format_jobs(jobs):
