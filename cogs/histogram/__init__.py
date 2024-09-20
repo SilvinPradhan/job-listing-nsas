@@ -1,0 +1,2 @@
+from cogs.histogram.histogram_fetcher import fetch_salary_histogram
+from cogs.histogram.histogram_plotter import plot_salary_histogram
