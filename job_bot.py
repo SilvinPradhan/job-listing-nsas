@@ -1,7 +1,7 @@
 import discord
 import requests
 from discord.ext import commands, tasks
-from discord import app_commands, channel
+from discord import app_commands
 from dotenv import load_dotenv
 import os
 import traceback
