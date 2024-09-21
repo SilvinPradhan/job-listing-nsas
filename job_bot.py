@@ -30,9 +30,13 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 )
 @app_commands.describe(
     keywords="Enter the job title or keywords",
-    location="Enter a US state abbreviation (e.g., TX for Texas, LA for Louisiana)"
+    location="Enter a US state abbreviation (e.g., TX for Texas, LA for Louisiana)",
+    salary_min="Enter the minimum salary (optional)",
+    company="Enter the company name (optional)",
+    page="Enter the page number for pagination (default is 1)",
+    days_limit="Enter the number of days to limit job postings (optional)"
 )
-async def search_jobs(interaction: discord.Interaction, keywords: str, location: str):
+async def search_jobs(interaction: discord.Interaction, keywords: str, location: str, salary_min: int = 0, company: str = "", page: int = 1, days_limit: int = 30):
     try:
         # Check if keywords or location is empty
         if not keywords.strip():
@@ -55,7 +59,7 @@ async def search_jobs(interaction: discord.Interaction, keywords: str, location:
         full_location = US_STATES[state_code]
 
         # Fetch jobs using the helper function
-        jobs = fetch_adzuna_jobs(keywords, full_location)
+        jobs = fetch_adzuna_jobs(keywords, full_location, salary_min=salary_min, company=company, page=page, days_limit=days_limit)
 
         # If the response is empty or no jobs found
         if not jobs:
@@ -101,13 +105,18 @@ async def search_jobs(interaction: discord.Interaction, keywords: str, location:
     "Fetch the latest internships for a specific field in a US state")
 @app_commands.describe(
     field="Select a job field",
-    state="Enter a valid US state code (e.g., LA for Louisiana)")
+    state="Enter a valid US state code (e.g., LA for Louisiana)",
+    salary_min="Enter the minimum salary (optional)",
+    company="Enter the company name (optional)",
+    page="Enter the page number for pagination (default is 1)",
+    days_limit="Enter the number of days to limit job postings (optional)"
+)
 @app_commands.choices(field=JOB_FIELDS)
 @commands.cooldown(
     rate=1, per=30,
     type=commands.BucketType.user)  # Rate limit: 1 use per 30 seconds per user
 async def job(interaction: discord.Interaction,
-              field: app_commands.Choice[str], state: str):
+              field: app_commands.Choice[str], state: str, salary_min: int = 0, company: str = "", page: int = 1, days_limit: int = 30):
     try:
         state_code = state.upper()
         if state_code not in US_STATES:
@@ -116,7 +125,7 @@ async def job(interaction: discord.Interaction,
             )
             return
         search_term = field.value + " internship"
-        jobs = fetch_adzuna_jobs(search_term, location=US_STATES[state_code])
+        jobs = fetch_adzuna_jobs(search_term, location=US_STATES[state_code], salary_min=salary_min, company=company, page=page, days_limit=days_limit)
         job_listings = format_jobs(jobs)
         if job_listings:
             chunks = split_message(job_listings)
@@ -139,7 +148,7 @@ async def getQuotes():
     if channel:
         apiUrl = 'https://zenquotes.io/api/quotes/'
         data = await fetchQuotesApi(apiUrl)
-        mlist =[]
+        mlist = []
         if data:
             # Data is long list with each value of dictionary. taking only one element
             data = data[0]
@@ -184,6 +193,16 @@ async def post_jobs():
         chunks_bio = split_message(job_listings_bio)
         for chunk in chunks_bio:
             await channel.send(chunk)
+            
+    # Fetch additional fields (if needed) -- discord server timesout (Possible future )
+    # for field in JOB_FIELDS:
+    #     field_jobs = fetch_adzuna_jobs(f'{field} internship', location='Louisiana')
+    #     if field_jobs:
+    #         await channel.send(f"**Latest {field.capitalize()} Internships in Louisiana:**")
+    #         job_listings_field = format_jobs(field_jobs)
+    #         chunks_field = split_message(job_listings_field)
+    #         for chunk in chunks_field:
+    #             await channel.send(chunk)
 
 # Slash command to generate and display salary histogram
 @bot.tree.command(
