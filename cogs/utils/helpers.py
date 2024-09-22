@@ -17,3 +17,7 @@ def split_message(content, limit=2000):
         chunks.append(current_chunk)
 
     return chunks
+
+# Function to build the pagination footer for users
+def pagination_footer(current_page, total_pages):
+    return f"Page {current_page}/{total_pages}"
