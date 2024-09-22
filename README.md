@@ -29,7 +29,7 @@ Thank you for contributing!
 ## Features
 
 - **Fetch job listings by custom keywords**: Allows users to search for jobs by custom keywords and US state codes.
-- **Fetch job listings**: Allows users to search for internships in specific fields and US states.
+- **Fetch job listings**: Allows users to search for internships in specific fields and US states, with rate-limited commands to avoid API spamming.
 - **Scheduled job postings**: Automatically posts the latest job listings for predefined fields and locations at regular intervals (every 6 hours).
 - **Salary histogram**: Fetches and displays the salary distribution for a specific job title and location (state) in the United States.
 - **Motivational quotes**: Posts a daily motivational quote in a designated channel.
@@ -81,38 +81,39 @@ Once the bot is online, it will respond to slash commands and automatically post
 
 ## Commands
 
-### `/search_jobs` Command
+### `/job_search_by_keywords`
 
-**Description**: Searches for jobs by custom keywords and US state code (e.g., TX for Texas, LA for Louisiana).
+**Description**: Searches for jobs by custom keywords and US state codes (e.g., TX for Texas, LA for Louisiana).
 
-**Usage**: `/search_jobs keywords:<keywords> location:<state_code>`
+**Usage**: `/job_search_by_keywords keywords:<keywords> location:<state_code>`
 
-- **Keywords**: Enter any job title or custom keyword (e.g., `software engineer`, `data scientist`).
-- **Location**: Enter a valid two-letter US state code (e.g., `TX` for Texas, `LA` for Louisiana).
+- **Keywords**: Enter a job title or keywords (e.g., `software engineer`, `data scientist`).
+- **Location**: Enter a valid two-letter US state code (e.g., `TX` for Texas, `CA` for California).
 
-**Example**: `/search_jobs keywords:software engineer location:TX`
+**Example**: `/job_search_by_keywords keywords:software engineer location:TX`
 
-This command fetches the latest job listings based on the provided keywords and location. The bot will format the response and return job titles, company names, locations, and links to apply.
+This command fetches job listings based on the provided keywords and location.
 
-If there are too many job listings, the bot will split the message into multiple chunks to stay within Discord's 2000-character message limit.
+---
 
-### `/job` Command
+### `/job_search_internships`
 
-**Description**: Fetches the latest internship listings for a specific field in a US state.
+**Description**: Fetches the latest internships for a specific field and US state.
 
-**Usage**: `/job field:<job_field> state:<state_code>`
+**Usage**: `/job_search_internships field:<job_field> state:<state_code>`
 
-- **Field**: You can select between two job fields (`Computer Science` and `Biology`).
-- **State**: You can enter a valid two-letter US state code (e.g., `CA` for California, `LA` for Louisiana, etc.).
+- **Field**: Select a field (e.g., `Computer Science`, `Biology`).
+- **State**: Enter a valid US state code (e.g., `TX` for Texas, `CA` for California).
 
-**Example**: `/job field:Computer Science state:LA`
+**Example**: `/job_search_internships field:Computer Science state:TX`
 
-This command fetches the latest computer science internships available in Louisiana. The bot will format the response and return job titles, company names, locations, and links to apply.
-
+The command fetches internships in a specific field and location.
 
 If there are too many job listings, the bot will split the message into multiple chunks to stay within Discord's 2000-character message limit.
 
 **Rate Limit**: The command is rate-limited to one request per 30 seconds per user to avoid overloading the API.
+
+---
 
 ### `/salary_histogram` Command
 
@@ -156,23 +157,34 @@ You can modify the code in the `post_jobs()` function (found in `bot.py`) to cha
 ## File Structure
 
 ```plaintext
-discord-bot/
-├── bot.py                # Main bot file
-├── .env                  # Environment variables (not pushed to GitHub)
-├── .gitignore            # Git ignore file
-├── requirements.txt      # Python dependencies
-├── README.md             # Project description and instructions
-├── cogs/                 # Folder to hold all separated functionalities (modules)
-│   ├── __init__.py       # Marks directory as a package
-│   ├── job_fetcher.py    # File containing job-fetching functions
-│   ├── helpers.py        # Utility/helper functions for message splitting
-│   ├── us_states.py      # Contains US state abbreviations and full names
-│   ├── job_fields.py     # Contains job field choices
-│   ├── motivation.py     # Contains job field choices
-│   ├── histogram_fetcher.py  # File for fetching histogram data from Adzuna API
-│   ├── histogram_plotter.py  # File for plotting the salary histogram
-└── deploy/               # Deployment-related files
-    └── digitalocean.md   # DigitalOcean deployment instructions
+JOB_BOT/
+├── cogs/                     
+│   ├── excel/                
+│   │   ├── __init__.py
+│   │   ├── excel_formatting.py
+│   │   ├── excel_generator.py
+│   ├── histogram/            
+│   │   ├── __init__.py
+│   │   ├── histogram_fetcher.py
+│   │   ├── histogram_plotter.py
+│   ├── jobs/                 
+│   │   ├── __init__.py
+│   │   ├── job_fetcher.py
+│   ├── misc/                 
+│   │   ├── __init__.py
+│   │   ├── motivation.py
+│   ├── utils/                
+│   │   ├── __init__.py
+│   │   ├── helpers.py
+│   │   ├── job_fields.py
+│   │   ├── us_states.py
+├── deploy/                   
+│   ├── digitalocean.md
+├── .env                      
+├── .gitignore                
+├── job_bot.py                
+├── README.md                 
+├── requirements.txt          
 ```
 
 ---
