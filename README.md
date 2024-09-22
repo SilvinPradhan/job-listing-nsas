@@ -1,4 +1,4 @@
-# Discord Job Bot for Internship Listings
+# Discord Job Bot for Job Listings
 
 This Discord bot is designed to fetch the latest job and internship listings using the [Adzuna Job Search API](https://developer.adzuna.com/). It can be used to search for internships by field and location, as well as automatically post job updates to a specific Discord channel every 6 hours.
 
