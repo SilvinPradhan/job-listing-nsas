@@ -9,7 +9,7 @@ class MotivationalQuotesCommands(commands.Cog):
 
     @tasks.loop(hours=24)
     async def get_quotes(self):
-        JOB_POSTING_CHANNEL_ID = 1285276393235550231
+        JOB_POSTING_CHANNEL_ID = 1017817516342513704
         channel = self.bot.get_channel(JOB_POSTING_CHANNEL_ID)
         if channel:
             apiUrl = 'https://zenquotes.io/api/quotes/'

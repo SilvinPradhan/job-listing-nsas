@@ -12,11 +12,11 @@ class PostJobsCommands(commands.Cog):
     @tasks.loop(hours=6)
     async def post_jobs(self):
         await self.bot.wait_until_ready()
-        JOB_POSTING_CHANNEL_ID = 1285276393235550231
+        JOB_POSTING_CHANNEL_ID = 1017817516342513704
         channel = self.bot.get_channel(JOB_POSTING_CHANNEL_ID)
 
         if channel is None:
-            print(f"Error: Channel with ID {1285276393235550231} not found.")
+            print(f"Error: Channel with ID {JOB_POSTING_CHANNEL_ID} not found.")
             return
 
         # Fetch jobs for Computer Science in Louisiana (Default)
