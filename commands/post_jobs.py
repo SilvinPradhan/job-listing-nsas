@@ -9,7 +9,7 @@ class PostJobsCommands(commands.Cog):
         self.post_jobs.start()
         
     # Task to automatically post new job listings every 6 hours and quotes   
-    @tasks.loop(hours=6)
+    @tasks.loop(hours=72)
     async def post_jobs(self):
         await self.bot.wait_until_ready()
         JOB_POSTING_CHANNEL_ID = 1017817516342513704
