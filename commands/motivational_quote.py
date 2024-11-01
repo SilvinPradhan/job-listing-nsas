@@ -14,7 +14,7 @@ class MotivationalQuotesCommands(commands.Cog):
         self.scheduler.add_job(self.get_quotes, CronTrigger(hour=8, minute=30))
 
     async def get_quotes(self):
-        JOB_POSTING_CHANNEL_ID = 1017817516342513704
+        JOB_POSTING_CHANNEL_ID = 1017817516342513704 
         channel = self.bot.get_channel(JOB_POSTING_CHANNEL_ID)
         if channel:
             apiUrl = 'https://zenquotes.io/api/quotes/'

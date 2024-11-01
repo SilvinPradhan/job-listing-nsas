@@ -16,7 +16,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Initialize the scheduler
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(timezone ='America/Chicago')
 
 @bot.event
 async def on_ready():
